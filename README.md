@@ -26,6 +26,11 @@ their own private account.
 - **One-time import** — if this browser has old data from the original
   single-device version of the app, you'll be offered a one-click import
   into your account on first sign-in.
+- **Bulk import from a spreadsheet** — upload a `.xlsx`, `.xls`, or `.csv`
+  file from the Session log tab. Columns are auto-mapped by header name
+  (Date, Location, Result, Buy-in, Cash-out, Game, Notes, …) with a review
+  step before anything is imported; a result can also be computed from
+  buy-in/cash-out if no result column exists.
 
 ## Project layout
 

@@ -64,6 +64,12 @@ function AppShell() {
     setSessions((prev) => prev.filter((s) => s.id !== id));
   }
 
+  async function handleBulkImport(rows) {
+    if (!rows.length) return;
+    const inserted = await bulkInsertSessions(user.id, rows);
+    setSessions((prev) => [...inserted, ...prev]);
+  }
+
   if (loading) return null;
   if (!user) return <AuthScreen />;
 
@@ -99,6 +105,7 @@ function AppShell() {
               onCreate={handleCreate}
               onUpdate={handleUpdate}
               onDelete={handleDelete}
+              onBulkImport={handleBulkImport}
             />
           )}
           {activeTab === "analysis" && <AnalysisTab sessions={sessions} />}

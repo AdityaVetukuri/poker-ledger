@@ -3,10 +3,12 @@ import { normLoc } from "../../lib/stats";
 import SessionForm from "./SessionForm";
 import SessionRow from "./SessionRow";
 import ReflectionWizard from "../reflection/ReflectionWizard";
+import ImportSheetModal from "./ImportSheetModal";
 
-export default function SessionsTab({ sessions, locations, onCreate, onUpdate, onDelete }) {
+export default function SessionsTab({ sessions, locations, onCreate, onUpdate, onDelete, onBulkImport }) {
   const [locFilter, setLocFilter] = useState("all");
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const [reflectingSession, setReflectingSession] = useState(null);
   const [busy, setBusy] = useState(false);
 
@@ -44,6 +46,9 @@ export default function SessionsTab({ sessions, locations, onCreate, onUpdate, o
             </option>
           ))}
         </select>
+        <button className="pl-btn-small ghost" onClick={() => setShowImport(true)} type="button">
+          Import spreadsheet
+        </button>
         <button className="pl-btn-primary" onClick={() => setShowAddForm((s) => !s)} type="button">
           {showAddForm ? "× Cancel" : "+ Log a session"}
         </button>
@@ -79,6 +84,8 @@ export default function SessionsTab({ sessions, locations, onCreate, onUpdate, o
           onSkip={() => setReflectingSession(null)}
         />
       )}
+
+      {showImport && <ImportSheetModal onImport={onBulkImport} onClose={() => setShowImport(false)} />}
     </main>
   );
 }
