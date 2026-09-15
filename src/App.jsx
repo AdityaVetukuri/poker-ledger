@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabaseConfigured } from "./lib/supabaseClient";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { listSessions, createSession, updateSession, deleteSession, bulkInsertSessions } from "./lib/sessions";
+import { listHands, createHand, updateHand, deleteHand } from "./lib/hands";
 import { computeOverviewStats, getLocations } from "./lib/stats";
 import { readLegacySessions, clearLegacySessions } from "./lib/localImport";
 import SetupNeeded from "./components/setup/SetupNeeded";
@@ -11,6 +12,7 @@ import Tabs from "./components/layout/Tabs";
 import Overview from "./components/overview/Overview";
 import SessionsTab from "./components/sessions/SessionsTab";
 import ImportBanner from "./components/sessions/ImportBanner";
+import HandsTab from "./components/hands/HandsTab";
 import AnalysisTab from "./components/analysis/AnalysisTab";
 
 function AppShell() {
@@ -18,6 +20,7 @@ function AppShell() {
   const [activeTab, setActiveTab] = useState("overview");
   const [sessions, setSessions] = useState([]);
   const [sessionsLoading, setSessionsLoading] = useState(true);
+  const [hands, setHands] = useState([]);
   const [error, setError] = useState("");
   const [legacy, setLegacy] = useState([]);
   const [legacyDismissed, setLegacyDismissed] = useState(false);
@@ -29,6 +32,9 @@ function AppShell() {
       .then((data) => setSessions(data))
       .catch((e) => setError(e.message))
       .finally(() => setSessionsLoading(false));
+    listHands()
+      .then((data) => setHands(data))
+      .catch((e) => setError(e.message));
   }, [user]);
 
   useEffect(() => {
@@ -70,6 +76,23 @@ function AppShell() {
     setSessions((prev) => [...inserted, ...prev]);
   }
 
+  async function handleCreateHand(fields) {
+    const created = await createHand(user.id, fields);
+    setHands((prev) => [created, ...prev]);
+    return created;
+  }
+
+  async function handleUpdateHand(id, fields) {
+    const updated = await updateHand(id, fields);
+    setHands((prev) => prev.map((h) => (h.id === id ? updated : h)));
+    return updated;
+  }
+
+  async function handleDeleteHand(id) {
+    await deleteHand(id);
+    setHands((prev) => prev.filter((h) => h.id !== id));
+  }
+
   if (loading) return null;
   if (!user) return <AuthScreen />;
 
@@ -106,6 +129,15 @@ function AppShell() {
               onUpdate={handleUpdate}
               onDelete={handleDelete}
               onBulkImport={handleBulkImport}
+            />
+          )}
+          {activeTab === "hands" && (
+            <HandsTab
+              hands={hands}
+              sessions={sessions}
+              onCreate={handleCreateHand}
+              onUpdate={handleUpdateHand}
+              onDelete={handleDeleteHand}
             />
           )}
           {activeTab === "analysis" && <AnalysisTab sessions={sessions} />}

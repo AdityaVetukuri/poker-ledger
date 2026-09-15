@@ -1,6 +1,7 @@
 const TABS = [
   { key: "overview", label: "Overview" },
   { key: "log", label: "Session log" },
+  { key: "hands", label: "Hands" },
   { key: "analysis", label: "Analysis" },
 ];
 

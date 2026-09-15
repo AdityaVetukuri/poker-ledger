@@ -31,6 +31,14 @@ their own private account.
   (Date, Location, Result, Buy-in, Cash-out, Game, Notes, …) with a review
   step before anything is imported; a result can also be computed from
   buy-in/cash-out if no result column exists.
+- **Hand histories** — the Hands tab lets you log a full hand against a
+  session: table size, blinds, effective stack, your position and hole
+  cards (picked from a visual card grid), then street-by-street — every
+  active player gets their own row to log fold/check/call/bet/raise/all-in
+  with an amount, so it's clear at a glance how many players are in and
+  what each one did. A visual oval table (seats, stacks, your cards, the
+  board) updates live as you build the hand, and saved hands get a replayer
+  with Preflop/Flop/Turn/River tabs to step back through the action.
 
 ## Project layout
 
