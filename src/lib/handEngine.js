@@ -26,16 +26,21 @@ export function potByStreet(smallBlind, bigBlind, actions) {
   return result;
 }
 
-// Seats still in the hand as of the start of `street` (i.e. haven't folded
-// on an earlier street).
+// Seats still in the hand as of `street`. Preflop, everyone dealt a hand is
+// in. For every later street, a seat only carries forward if it logged a
+// non-fold action on the *immediately preceding* street — so a seat you
+// never gave an action to (rather than one you explicitly folded) still
+// correctly drops off, and the seat list narrows down on its own as you
+// build out the hand instead of showing every seat on every street.
 export function activeSeatsAtStreet(seats, actions, street) {
   const streetIdx = STREETS.indexOf(street);
-  const folded = new Set(
-    actions
-      .filter((a) => a.action === "fold" && STREETS.indexOf(a.street) < streetIdx)
-      .map((a) => a.seat)
-  );
-  return seats.filter((s) => !folded.has(s.seat));
+  if (streetIdx <= 0) return seats;
+
+  const prevActions = actionsForStreet(actions, STREETS[streetIdx - 1]);
+  const foldedPrev = new Set(prevActions.filter((a) => a.action === "fold").map((a) => a.seat));
+  const actedPrev = new Set(prevActions.map((a) => a.seat));
+
+  return seats.filter((s) => actedPrev.has(s.seat) && !foldedPrev.has(s.seat));
 }
 
 export function actionsForStreet(actions, street) {
