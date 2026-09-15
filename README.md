@@ -63,17 +63,22 @@ poker-ledger/
 ├── index.html, vite.config.js, package.json
 ├── supabase/schema.sql       run this once in the Supabase SQL editor
 ├── .env.example               copy to .env.local and fill in your project
+├── public/                    PWA manifest + app icons
 └── src/
     ├── main.jsx, App.jsx
-    ├── lib/                   supabaseClient, sessions CRUD, stats/leak analytics, leak taxonomy
+    ├── lib/                   supabaseClient, sessions/hands CRUD, stats,
+    │                          time-series + hand-engine helpers, leak
+    │                          taxonomy, card/position helpers, importers
     ├── contexts/AuthContext.jsx
     └── components/
         ├── auth/              sign in / create account
         ├── layout/             header, tabs, chip logo
-        ├── overview/           hero stats + charts
+        ├── overview/           bankroll chart + stats + charts
         ├── sessions/           session list, add/edit form, import banner
         ├── reflection/         the post-session wizard
-        └── analysis/           leak board, mental-game chart, action items
+        ├── analysis/           leak board, mental-game chart, action items
+        ├── hands/               hand log, visual table, replayer
+        └── cards/               playing-card + card-picker UI
 ```
 
 ## Setup
@@ -144,8 +149,8 @@ already set on the site.
 Any other static host — Vercel, Cloudflare Pages, GitHub Pages — works too
 with the same build command/publish directory/env vars.
 
-## Roadmap (not built yet)
+## More
 
-Goals/streaks, CSV export, an opponent/villain database, Google OAuth sign-in,
-offline/PWA support, and public read-only share links. The schema and data
-layer (`src/lib/`) are structured so these can be added without a rewrite.
+See [REQUIREMENTS.md](REQUIREMENTS.md) for the full feature log, key
+decisions, and roadmap; see [CLAUDE.md](CLAUDE.md) for how this repo is
+developed and deployed day to day.
