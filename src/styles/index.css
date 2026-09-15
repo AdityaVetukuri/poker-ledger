@@ -13,7 +13,12 @@ body{
   margin:0; background:radial-gradient(ellipse at top, var(--felt-2) 0%, var(--felt) 60%);
   color:var(--ivory); font-family:var(--font-body); min-height:100vh;
 }
-#root{ max-width:900px; margin:0 auto; padding:28px 18px 60px; }
+#root{
+  max-width:900px; margin:0 auto;
+  /* extra top/bottom padding lets content clear the iOS notch / home
+     indicator when installed as a standalone home-screen app */
+  padding:calc(28px + env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) calc(60px + env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
+}
 .win{ color:var(--win); } .loss{ color:var(--loss); }
 
 header{ display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; }

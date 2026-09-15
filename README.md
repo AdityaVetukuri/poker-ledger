@@ -9,6 +9,19 @@ React + Vite frontend, [Supabase](https://supabase.com) (Postgres + Auth)
 for the database, so your sessions sync across devices and each user has
 their own private account.
 
+## Live app
+
+**https://poker-the-ledger.netlify.app**
+
+Installs like a native app on iPhone: open that link in **Safari** (must
+be Safari, not Chrome — "Add to Home Screen" is Safari-only on iOS), tap
+the **Share** button, then **Add to Home Screen**. It launches full-screen
+from your home screen with its own icon, no browser address bar. Same
+works on Android in Chrome (menu → "Install app" / "Add to Home screen").
+
+New users: sign up with an email + password, then check that email for a
+confirmation link before signing in (Supabase requires this by default).
+
 ## Features
 
 - **Session log** — date, location, cash/tournament, variant, stakes,
@@ -39,6 +52,9 @@ their own private account.
   what each one did. A visual oval table (seats, stacks, your cards, the
   board) updates live as you build the hand, and saved hands get a replayer
   with Preflop/Flop/Turn/River tabs to step back through the action.
+- **Installable (PWA)** — add it to your phone's home screen for a
+  full-screen, native-feeling app icon; no App Store needed. See "Live
+  app" above.
 
 ## Project layout
 
@@ -109,21 +125,24 @@ sessions.
 
 ## Building for production / deploying
 
+The live site (above) is a Netlify project (`poker-the-ledger`) currently
+deployed by pushing a local build rather than Netlify building from GitHub
+— so a code change needs a manual redeploy:
+
 ```bash
 npm run build
+npx netlify-cli deploy --prod --dir=dist --site 313ab4d7-e3ec-413b-b573-8c69f1cf5ca9
 ```
 
-This outputs a static `dist/` folder. Deploy it anywhere that serves static
-files — **Netlify**, **Vercel**, **Cloudflare Pages**, or **GitHub Pages**
-all work. On Netlify/Vercel, connect the GitHub repo and set:
+(needs `NETLIFY_AUTH_TOKEN` set, or `netlify login` first). To switch to
+Netlify auto-building on every push instead, connect the GitHub repo under
+the site's **Site configuration → Build & deploy** in the Netlify
+dashboard, with build command `npm run build` and publish directory
+`dist` — the `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` env vars are
+already set on the site.
 
-- Build command: `npm run build`
-- Publish directory: `dist`
-- Environment variables: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (same
-  values as your `.env.local`)
-
-so the platform builds it in the cloud — your own machine doesn't need
-Node.js installed just to deploy.
+Any other static host — Vercel, Cloudflare Pages, GitHub Pages — works too
+with the same build command/publish directory/env vars.
 
 ## Roadmap (not built yet)
 
