@@ -26,21 +26,39 @@ export function potByStreet(smallBlind, bigBlind, actions) {
   return result;
 }
 
-// Seats still in the hand as of `street`. Preflop, everyone dealt a hand is
-// in. For every later street, a seat only carries forward if it logged a
-// non-fold action on the *immediately preceding* street — so a seat you
-// never gave an action to (rather than one you explicitly folded) still
-// correctly drops off, and the seat list narrows down on its own as you
-// build out the hand instead of showing every seat on every street.
+// Seats still in the hand as of `street`.
+//
+// Preflop: everyone dealt a hand is in.
+//
+// Preflop -> flop is the one transition that requires an *explicit*
+// non-fold action to carry forward (not just "hasn't folded"): every
+// player who sees the flop necessarily acted preflop (even a limp/check is
+// an action), so a seat you never gave a preflop action to genuinely
+// wasn't part of the pot — this is what keeps seats that didn't call out
+// of the flop's row list.
+//
+// Flop -> turn and turn -> river are looser on purpose: only an *explicit*
+// fold removes a seat. A skipped/not-yet-logged check shouldn't lock that
+// player out of the next street while you're still building the hand —
+// there'd be no way back in if it did.
 export function activeSeatsAtStreet(seats, actions, street) {
   const streetIdx = STREETS.indexOf(street);
   if (streetIdx <= 0) return seats;
 
-  const prevActions = actionsForStreet(actions, STREETS[streetIdx - 1]);
-  const foldedPrev = new Set(prevActions.filter((a) => a.action === "fold").map((a) => a.seat));
-  const actedPrev = new Set(prevActions.map((a) => a.seat));
+  if (streetIdx === 1) {
+    const preflopActions = actionsForStreet(actions, "preflop");
+    const folded = new Set(preflopActions.filter((a) => a.action === "fold").map((a) => a.seat));
+    const acted = new Set(preflopActions.map((a) => a.seat));
+    return seats.filter((s) => acted.has(s.seat) && !folded.has(s.seat));
+  }
 
-  return seats.filter((s) => actedPrev.has(s.seat) && !foldedPrev.has(s.seat));
+  const enteringPrevStreet = activeSeatsAtStreet(seats, actions, STREETS[streetIdx - 1]);
+  const foldedOnPrev = new Set(
+    actionsForStreet(actions, STREETS[streetIdx - 1])
+      .filter((a) => a.action === "fold")
+      .map((a) => a.seat)
+  );
+  return enteringPrevStreet.filter((s) => !foldedOnPrev.has(s.seat));
 }
 
 export function actionsForStreet(actions, street) {
