@@ -1,67 +1,119 @@
-# The Ledger — Poker Session Tracker
+# The Ledger — Poker Journal
 
-A small, self-contained web app for tracking poker sessions: results by
-month, a bankroll chart, a breakdown by game/location, and a log where you
-can add new sessions and jot notes on what to improve.
+A poker session tracker that goes beyond a bankroll spreadsheet: log each
+session, get asked a short set of reflection questions right after (mental
+game, what worked, the leak, one action step), and see analysis of which
+leaks are actually costing you money over time.
 
-No build step, no dependencies to install — it's plain HTML, CSS, and
-JavaScript, plus two CDN-loaded libraries (Chart.js for the graphs, and a
-Google Font).
+React + Vite frontend, [Supabase](https://supabase.com) (Postgres + Auth)
+for the database, so your sessions sync across devices and each user has
+their own private account.
 
-## Files
+## Features
+
+- **Session log** — date, location, cash/tournament, variant, stakes,
+  buy-in/cash-out (auto-computes result), duration.
+- **Post-session reflection wizard** — a short, skippable flow after saving
+  a session: rate your mental game, note what worked, name a leak (tagged
+  from a fixed taxonomy or your own custom tag), one action step for next
+  time, and any reads on opponents.
+- **Overview** — net result, win rate, bankroll-over-time and by-month
+  charts, breakdown by location.
+- **Analysis** — leak frequency and average $ impact per tag, mental-game
+  rating vs. result, and a running list of your recent action items.
+- **Accounts** — email/password auth; Postgres row-level security means you
+  only ever see your own sessions.
+- **One-time import** — if this browser has old data from the original
+  single-device version of the app, you'll be offered a one-click import
+  into your account on first sign-in.
+
+## Project layout
 
 ```
 poker-ledger/
-├── index.html    the page shell (loads styles.css and app.js)
-├── styles.css    all styling
-├── app.js        app logic, including your starting session data
-└── README.md     this file
+├── index.html, vite.config.js, package.json
+├── supabase/schema.sql       run this once in the Supabase SQL editor
+├── .env.example               copy to .env.local and fill in your project
+└── src/
+    ├── main.jsx, App.jsx
+    ├── lib/                   supabaseClient, sessions CRUD, stats/leak analytics, leak taxonomy
+    ├── contexts/AuthContext.jsx
+    └── components/
+        ├── auth/              sign in / create account
+        ├── layout/             header, tabs, chip logo
+        ├── overview/           hero stats + charts
+        ├── sessions/           session list, add/edit form, import banner
+        ├── reflection/         the post-session wizard
+        └── analysis/           leak board, mental-game chart, action items
 ```
 
-## Running it locally
+## Setup
 
-Just open `index.html` in a browser — double-click it, or drag it into a
-browser window. No server required.
+### 1. Install Node.js and project dependencies
 
-## Putting it on the web (so your phone can reach it too)
+You need Node 18+ installed. Then:
 
-Opening the file locally only works on that one computer. To get a real
-web address:
+```bash
+npm install
+```
 
-1. Go to **[app.netlify.com/drop](https://app.netlify.com/drop)**.
-2. Drag the whole `poker-ledger` folder (not just one file) onto the page.
-3. Netlify gives you a live URL like `random-name-123.netlify.app` —
-   open that on your phone and bookmark it, or add it to your home screen.
-4. To keep the same URL for future updates (instead of getting a new
-   random one each time), sign up for a free Netlify account first and
-   claim the site — then you can redeploy to the same address.
+### 2. Create a Supabase project
 
-Other free options that work the same way with a folder: **Vercel**,
-**Cloudflare Pages**, or **GitHub Pages** (if you're comfortable with git).
+1. Go to **[supabase.com/dashboard](https://supabase.com/dashboard)** and
+   sign up / log in (free tier is enough).
+2. Create a new project (pick any name/region; set a database password —
+   you won't need it day to day).
+3. Once it's ready, open **Project Settings → API** and copy:
+   - **Project URL**
+   - **anon public** key
+4. Open the **SQL Editor**, paste the contents of
+   [`supabase/schema.sql`](supabase/schema.sql), and run it. This creates the
+   `sessions` table with row-level security so each user only sees their own
+   rows.
+5. By default Supabase requires email confirmation for new accounts. For
+   quick personal use you can turn this off under **Authentication →
+   Providers → Email → Confirm email**, or just click the confirmation link
+   Supabase emails you after signing up.
 
-## How your data is stored
+### 3. Configure the app
 
-Your sessions are saved in the browser's local storage — on whichever
-device and browser you're using. This means:
+```bash
+cp .env.example .env.local
+```
 
-- Adding a session on your phone won't show up on your laptop, and vice
-  versa, unless you're using the exact same browser on the exact same
-  device.
-- Clearing your browser's site data/history for this page will erase your
-  saved sessions (it'll fall back to reload the starting data baked into
-  `app.js`).
-- There's no server, account, or sign-in — everything lives in your
-  browser only.
+Fill in `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` with the values
+from step 2. The anon key is safe to ship in the frontend — it's the RLS
+policies in `schema.sql` that actually keep everyone's data private.
 
-If you want true cross-device sync (add on your phone, see it instantly
-on your laptop), that needs a real backend/database — a bigger step up
-from this static version. Worth doing if this sticks as a habit.
+### 4. Run it
 
-## Updating the starting data
+```bash
+npm run dev
+```
 
-The starting sessions are the `SEED_SESSIONS` array near the top of
-`app.js`. It only gets used the very first time the app loads with no
-saved data yet — after that, your browser's local storage is the source
-of truth. If you ever want to reset back to the original spreadsheet
-data, clear the site's local storage in your browser's dev tools and
-reload.
+Open the printed `localhost` URL, create an account, and start logging
+sessions.
+
+## Building for production / deploying
+
+```bash
+npm run build
+```
+
+This outputs a static `dist/` folder. Deploy it anywhere that serves static
+files — **Netlify**, **Vercel**, **Cloudflare Pages**, or **GitHub Pages**
+all work. On Netlify/Vercel, connect the GitHub repo and set:
+
+- Build command: `npm run build`
+- Publish directory: `dist`
+- Environment variables: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (same
+  values as your `.env.local`)
+
+so the platform builds it in the cloud — your own machine doesn't need
+Node.js installed just to deploy.
+
+## Roadmap (not built yet)
+
+Goals/streaks, CSV export, an opponent/villain database, Google OAuth sign-in,
+offline/PWA support, and public read-only share links. The schema and data
+layer (`src/lib/`) are structured so these can be added without a rewrite.
