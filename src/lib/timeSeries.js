@@ -6,7 +6,12 @@
 export const RANGE_KEYS = ["1M", "3M", "6M", "YTD", "1Y", "ALL"];
 
 export function dailyCumulativeSeries(sessions) {
-  const sorted = [...sessions].sort((a, b) => a.played_on.localeCompare(b.played_on));
+  // Defensive: played_on/amount are required by the DB schema, but a row
+  // sourced from somewhere less trustworthy than the normal form (a bad
+  // import, hand-edited data) missing either shouldn't be able to crash
+  // the whole Overview tab — skip it instead.
+  const usable = sessions.filter((s) => s.played_on && s.amount != null);
+  const sorted = [...usable].sort((a, b) => a.played_on.localeCompare(b.played_on));
   let running = 0;
   return sorted.map((s) => {
     running += Number(s.amount);
