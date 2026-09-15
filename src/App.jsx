@@ -120,7 +120,7 @@ function AppShell() {
         </main>
       ) : (
         <>
-          {activeTab === "overview" && <Overview stats={stats} />}
+          {activeTab === "overview" && <Overview stats={stats} sessions={sessions} />}
           {activeTab === "log" && (
             <SessionsTab
               sessions={sessions}

@@ -1,8 +1,9 @@
 import { fmtMoney } from "../../lib/stats";
-import BankrollChart from "./BankrollChart";
+import { dailyCumulativeSeries } from "../../lib/timeSeries";
+import RobinhoodChart from "./RobinhoodChart";
 import MonthlyChart from "./MonthlyChart";
 
-export default function Overview({ stats }) {
+export default function Overview({ stats, sessions }) {
   if (!stats) {
     return (
       <main>
@@ -15,19 +16,15 @@ export default function Overview({ stats }) {
   }
 
   const maxAbsLoc = Math.max(...stats.locArr.map((l) => Math.abs(l.total)), 1);
+  const series = dailyCumulativeSeries(sessions);
 
   return (
     <main>
-      <section className="pl-hero">
-        <span className="pl-hero-label">Net result across {stats.total} sessions</span>
-        <span className={`pl-hero-number ${stats.net >= 0 ? "win" : "loss"}`}>
-          {fmtMoney(stats.net, true)}
-        </span>
-        <span className="pl-hero-sub">
-          {stats.wins} winning &middot; {stats.losses} losing &middot;{" "}
-          {stats.total - stats.wins - stats.losses} even
-        </span>
-      </section>
+      <RobinhoodChart series={series} />
+      <p className="pl-rh-caption">
+        {stats.total} sessions &middot; {stats.wins} winning &middot; {stats.losses} losing &middot;{" "}
+        {stats.total - stats.wins - stats.losses} even
+      </p>
 
       <section className="pl-stat-grid">
         <div className="pl-stat-card">
@@ -64,7 +61,6 @@ export default function Overview({ stats }) {
         </div>
       </section>
 
-      <BankrollChart cumulative={stats.cumulative} />
       <MonthlyChart cumulative={stats.cumulative} />
 
       <section className="pl-panel">
