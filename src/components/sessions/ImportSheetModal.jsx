@@ -106,6 +106,21 @@ export default function ImportSheetModal({ onImport, onClose }) {
                   ))}
                 </div>
 
+                {previewRows.length === 0 && mapping.every((m) => m === "ignore") && (
+                  <p className="pl-form-error">
+                    None of these columns were auto-detected. That's fine — use the dropdowns above to set at
+                    least <strong>Date</strong>, <strong>Location</strong>, and <strong>Result</strong> (or
+                    Buy-in + Cash-out) to the matching columns from your file.
+                  </p>
+                )}
+                {previewRows.length === 0 && !mapping.every((m) => m === "ignore") && previewErrors.length > 0 && (
+                  <p className="pl-form-error">
+                    None of the {rawRows.length} row{rawRows.length === 1 ? "" : "s"} could be imported with the
+                    current mapping — for example: "{previewErrors[0].message}" (row {previewErrors[0].rowIndex + 1}).
+                    Double-check the dropdowns above match your columns.
+                  </p>
+                )}
+
                 <p className="pl-wizard-subtitle">
                   Preview: {previewRows.length} row{previewRows.length === 1 ? "" : "s"} ready to import
                   {previewErrors.length ? `, ${previewErrors.length} will be skipped` : ""}.

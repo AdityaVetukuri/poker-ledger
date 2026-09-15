@@ -16,46 +16,44 @@ export const TARGET_FIELDS = [
   { key: "notes_leak", label: "Notes" },
 ];
 
-// Header text -> guessed target field, matched case/space/punct-insensitively.
-const GUESS_MAP = {
-  date: "played_on",
-  playedon: "played_on",
-  session: "played_on",
-  month: "played_on",
-  location: "location",
-  where: "location",
-  venue: "location",
-  game: "game_type",
-  gametype: "game_type",
-  type: "game_type",
-  variant: "variant",
-  format: "variant",
-  stakes: "stakes",
-  blinds: "stakes",
-  tablesize: "table_size",
-  seats: "table_size",
-  buyin: "buy_in",
-  cashout: "cash_out",
-  result: "amount",
-  amount: "amount",
-  net: "amount",
-  profit: "amount",
-  pnl: "amount",
-  winloss: "amount",
-  duration: "duration_minutes",
-  minutes: "duration_minutes",
-  length: "duration_minutes",
-  notes: "notes_leak",
-  note: "notes_leak",
-  comments: "notes_leak",
-};
+// Header text -> guessed target field. Matched as a *substring* of the
+// slugified header (case/space/punctuation-insensitive), checked in this
+// order so a header matching multiple entries takes the first, more
+// specific one — e.g. "Game Date" contains both "date" and "game", and
+// needs to land on played_on, not game_type. Real-world header names vary
+// a lot ("Date Played", "Session Date", "Net Result", "Win/Loss", "Where
+// I Played", …), so this only needs to find *a* recognizable fragment,
+// not match the whole header.
+const GUESS_PATTERNS = [
+  { field: "played_on", keywords: ["date", "when"] },
+  { field: "location", keywords: ["location", "venue", "where", "casino", "club", "room"] },
+  { field: "buy_in", keywords: ["buyin"] },
+  { field: "cash_out", keywords: ["cashout"] },
+  { field: "amount", keywords: ["result", "amount", "net", "profit", "pnl", "winloss"] },
+  { field: "game_type", keywords: ["gametype", "cashortourney", "game"] },
+  { field: "variant", keywords: ["variant", "format"] },
+  { field: "stakes", keywords: ["stakes", "blind", "limit"] },
+  { field: "table_size", keywords: ["tablesize", "maxplayers", "seats"] },
+  { field: "duration_minutes", keywords: ["duration", "minutes", "mins", "length", "hours"] },
+  { field: "notes_leak", keywords: ["notes", "note", "comment"] },
+];
 
 function slug(s) {
   return String(s || "").trim().toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 
 export function guessMapping(headers) {
-  return headers.map((h) => GUESS_MAP[slug(h)] || "ignore");
+  return headers.map((h) => {
+    // "P&L" / "P/L" is common poker shorthand for result but slugs down to
+    // just "pl", too short/generic a fragment to match safely (it's a
+    // substring of "players", "split", etc.) — normalize it to "pnl"
+    // first so it hits the amount pattern without a bare "pl" keyword.
+    const normalized = String(h || "").replace(/p\s*[&/]\s*l\b/gi, "pnl");
+    const s = slug(normalized);
+    if (!s) return "ignore";
+    const match = GUESS_PATTERNS.find(({ keywords }) => keywords.some((kw) => s.includes(kw)));
+    return match ? match.field : "ignore";
+  });
 }
 
 // Reads the file (xlsx, xls, or csv) and returns { headers, rows } where
